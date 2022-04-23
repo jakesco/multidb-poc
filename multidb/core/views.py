@@ -14,11 +14,9 @@ class Index(LoginRequiredMixin, ListView):
     redirect_field_name = 'redirect_to'
 
     def get_queryset(self):
-        username = self.request.user.username
         return Item.objects.all()
 
     def post(self, request, *args, **kwargs):
         data = request.POST
-        username = self.request.user.username
         Item.objects.create(name=data["item"], user=request.user.username)
         return HttpResponseRedirect('/')

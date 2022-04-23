@@ -1,6 +1,8 @@
-# multidb-poc
+# Multi-tenant Proof of Concept
 
 Proof of concept for multipe tenant databases in Django.
+
+By default, the fixtures create 2 users **tenant1** and ** tenant2** both with password=**password**.
 
 ## References
 
