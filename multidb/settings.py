@@ -79,10 +79,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'default.sqlite3',
     },
-    'users': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'users.sqlite3',
-    },
     'tenant1': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'tenant1.sqlite3',
@@ -93,6 +89,7 @@ DATABASES = {
     },
 }
 
+DATABASE_ROUTERS = ['multidb.core.routers.TenantRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

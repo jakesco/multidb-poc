@@ -4,8 +4,16 @@
 <h1>Hello {{ user.username }}</h1>
 <ul>
     {% for item in item_list %}
-    <li>{{ item.name }}</li>
+    <li>{{ item.name }} ({{ item.user }} - {{ item.created_at }})</li>
     {% endfor %}
 </ul>
+<br>
+<form method="post">
+    {% csrf_token %}
+    <label for="item">Item Name</label>
+    <input type="text" id="item" name="item" required autofocus>
+    <button type="submit">Add Item</button>
+</form>
+<br>
 <a href="./logout">Log Out</a>
 {% endblock %}
