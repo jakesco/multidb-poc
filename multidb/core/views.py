@@ -15,10 +15,10 @@ class Index(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         username = self.request.user.username
-        return Item.objects.using(username).all()
+        return Item.objects.all()
 
     def post(self, request, *args, **kwargs):
         data = request.POST
         username = self.request.user.username
-        Item.objects.using(username).create(name=data["item"], user=request.user.username)
+        Item.objects.create(name=data["item"], user=request.user.username)
         return HttpResponseRedirect('/')
