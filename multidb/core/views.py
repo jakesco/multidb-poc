@@ -10,8 +10,8 @@ class Index(LoginRequiredMixin, ListView):
     template_name = "core/index.html"
     context_object_name = "item_list"
 
-    login_url = '/login'
-    redirect_field_name = 'redirect_to'
+    login_url = "/login"
+    redirect_field_name = "redirect_to"
 
     def get_queryset(self):
         return Item.objects.all()
@@ -19,4 +19,4 @@ class Index(LoginRequiredMixin, ListView):
     def post(self, request, *args, **kwargs):
         data = request.POST
         Item.objects.create(name=data["item"], user=request.user.username)
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect("/")

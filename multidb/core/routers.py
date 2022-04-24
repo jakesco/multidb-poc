@@ -6,9 +6,10 @@ threadlocal = threading.local()
 
 
 class RouterMiddleware:
+    """Middleware to expose the logged-in username to thread local."""
+
     def __init__(self, get_response):
         self.get_response = get_response
-        # One-time configuration and initialization.
 
     def __call__(self, request):
         setattr(threadlocal, "TENANT_DB", request.user.username)
@@ -54,8 +55,6 @@ class TenantRouter:
         Ensure core models only end up in tenant databases.
         The rest end up in default database.
         """
-        if db == 'default':
-            return app_label != 'core'
-        return app_label == 'core'
-
-
+        if db == "default":
+            return app_label != "core"
+        return app_label == "core"
