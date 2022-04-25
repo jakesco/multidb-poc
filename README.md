@@ -38,47 +38,43 @@ will be routed to the correct tenant database for the duration of a request.
 
 The primary code to make this work is in `multidb-poc/core/routers.py`. 
 There are two components, a `RouterMiddleware` and `TenantRouter`. 
-The `RouterMiddleware` is responsible for exposing the user object to thread local variables.
+The `RouterMiddleware` is responsible for exposing the user object to the tenant router.
 
 ```python
-import threading
+import contextvars
 
-threadlocal = threading.local()
-
+user_context = contextvars.ContextVar('tenant_username')
 
 class RouterMiddleware:
     """Middleware to expose the logged-in username to thread local."""
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # Set TENANT_DB in threadlocal to username.
-        setattr(threadlocal, "TENANT_DB", request.user.username)
+        # Sets the tenant_username var to username
+        user_context.set(request.user.username)
         response = self.get_response(request)
-        # Clear TENANT_DB after request is processed.
-        setattr(threadlocal, "TENANT_DB", None)
+        # Explicitly clear after response
+        user_context.set(None)
         return response
-
-
-def get_thread_local(attr, default=None):
-    return getattr(threadlocal, attr, default)
 ```
 
 The `TenantRouter` ensures queries are routed to the correct database.
 
 ```python
 class TenantRouter:
-"""
-Primary router for tenant data. Ensures read/writes on core models
-go to user's personal database.
-"""
+    """
+    Primary router for tenant data. Ensures read/writes on core models
+    go to user's personal database.
+    """
 
     def db_for_read(self, model, **hints):
         """
         Reads go to user's database if core model.
         """
         if model._meta.app_label == "core":
-            return get_thread_local("TENANT_DB")
+            return user_context.get()
         return None
 
     def db_for_write(self, model, **hints):
@@ -86,7 +82,7 @@ go to user's personal database.
         Writes go to user's database if core model.
         """
         if model._meta.app_label == "core":
-            return get_thread_local("TENANT_DB")
+            return user_context.get()
         return None
 
     def allow_relation(self, obj1, obj2, **hints):
@@ -100,9 +96,9 @@ go to user's personal database.
         Ensure core models only end up in tenant databases.
         The rest end up in default database.
         """
-        if db == 'default':
-            return app_label != 'core'
-        return app_label == 'core'
+        if db == "default":
+            return app_label != "core"
+        return app_label == "core"
 ```
 Note `allow_migrate` ensures only core models are stored in the tenant databases during migration.
 All other application models (auth, sessions, etc.) are stored in and retrieved from the default database.
