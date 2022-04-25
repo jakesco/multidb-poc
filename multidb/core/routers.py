@@ -1,8 +1,8 @@
 """Based on https://docs.djangoproject.com/en/4.0/topics/db/multi-db/"""
 
-import threading
+import contextvars
 
-threadlocal = threading.local()
+user_context = contextvars.ContextVar('tenant_username')
 
 
 class RouterMiddleware:
@@ -12,14 +12,10 @@ class RouterMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        setattr(threadlocal, "TENANT_DB", request.user.username)
+        user_context.set(request.user.username)
         response = self.get_response(request)
-        setattr(threadlocal, "TENANT_DB", None)
+        user_context.set(None)
         return response
-
-
-def get_thread_local(attr, default=None):
-    return getattr(threadlocal, attr, default)
 
 
 class TenantRouter:
@@ -33,7 +29,7 @@ class TenantRouter:
         Reads go to user's database if core model.
         """
         if model._meta.app_label == "core":
-            return get_thread_local("TENANT_DB")
+            return user_context.get()
         return None
 
     def db_for_write(self, model, **hints):
@@ -41,7 +37,7 @@ class TenantRouter:
         Writes go to user's database if core model.
         """
         if model._meta.app_label == "core":
-            return get_thread_local("TENANT_DB")
+            return user_context.get()
         return None
 
     def allow_relation(self, obj1, obj2, **hints):
